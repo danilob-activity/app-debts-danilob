@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">AppDebts</string>
     <string name="sucess_conection">Conexão realizada com sucesso!</string>
+    <string name="title_activity_main_window">MainWindow</string>
 </resources>
