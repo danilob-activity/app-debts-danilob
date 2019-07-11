@@ -18,8 +18,9 @@
         </activity>
         <activity
             android:name=".TelaInicial"
-            android:label="@string/title_activity_main_window"
-            android:theme="@style/AppTheme"></activity>
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme" />
+        <activity android:name=".InsertDebts" android:theme="@style/AppTheme2"></activity>
     </application>
 
 </manifest>
