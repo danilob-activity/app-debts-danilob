@@ -36,6 +36,12 @@ public class ScriptDLL {
         return "select * from categoria where id=?";
     }
 
+    public static String getCategoryName(){
+        return "select * from categoria where tipo=?";
+    }
+
+
+
     public static String getDebts(){
         return "select * from dividas";
     }

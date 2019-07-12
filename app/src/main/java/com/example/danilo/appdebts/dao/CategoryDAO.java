@@ -20,11 +20,18 @@ public class CategoryDAO {
     public CategoryDAO(SQLiteDatabase conection){
         mConnection = conection;
     }
-    public void insert(Category cat){
+    public Category insert(Category cat){
         ContentValues contentValues = new ContentValues();
         contentValues.put("tipo",cat.getType());
-        mConnection.insertOrThrow("categoria",null,contentValues);
-        Log.d("CategoriaDAO","Inserção realizada com sucesso!");
+        //verifica se existe uma categoria com mesmo nome não inserir
+        Category catDB = getCategory(cat.getType());
+        if(catDB==null){
+            cat.setId(mConnection.insertOrThrow("categoria",null,contentValues));
+            Log.d("CategoriaDAO","Inserção realizada com sucesso!");
+        }else{
+            cat = catDB;
+        }
+        return cat;
 
 
     }
@@ -72,4 +79,21 @@ public class CategoryDAO {
         }
         return null;
     }
+
+    public Category getCategory(String name){
+        Category cat = new Category();
+        String [] params = new String[1];
+        params[0] = name;
+        Cursor result = mConnection.rawQuery(ScriptDLL.getCategoryName(),params);
+        if(result.getCount()>0){
+            result.moveToFirst();
+            cat.setId(result.getLong(result.getColumnIndexOrThrow("id")));
+            cat.setType(result.getString(result.getColumnIndexOrThrow("tipo")));
+            result.close();
+            return cat;
+        }
+        return null;
+    }
+
+
 }

@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Switch;
 
 import com.example.danilo.appdebts.adapters.DebtsAdapter;
 import com.example.danilo.appdebts.classes.Category;
@@ -40,12 +41,18 @@ public class InsertDebts extends AppCompatActivity {
     EditText mEditTextDataPay;
     Spinner mSpinnerCategory;
     final Calendar myCalendar = Calendar.getInstance();
+    EditText mEditTextValue;
+    EditText mEditTextDescription;
+    Switch mSwitchPayed;
 
     //inserção no banco de dados
     CategoryDAO mCategoryDAO;
     DebtsDAO mDebtsDAO;
     private SQLiteDatabase mConection;
     private DatabaseHelper mDataHelper;
+
+    //int mCategorySelected = 0;
+    String newCategory = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +62,10 @@ public class InsertDebts extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //Mostrar o botão
         getSupportActionBar().setHomeButtonEnabled(true); //Ativar o botão
         getSupportActionBar().setTitle(R.string.titleInsert);
+
+        mEditTextValue = findViewById(R.id.editTextValue);
+        mEditTextDescription = findViewById(R.id.editTextDescription);
+        mSwitchPayed = findViewById(R.id.switchPay);
 
         mSpinnerCategory = findViewById(R.id.spinnerCategories);
 
@@ -104,7 +115,9 @@ public class InsertDebts extends AppCompatActivity {
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mCategoryDAO.insert(new Category(input.getText().toString()));
+                        Category cat = mCategoryDAO.insert(new Category(input.getText().toString()));
+
+                        newCategory = cat.getType();
                         updateSpinnerCategory();
                         //m_Text = input.getText().toString();
                     }
@@ -123,6 +136,7 @@ public class InsertDebts extends AppCompatActivity {
         createConnection();
         updateSpinnerCategory();
 
+
     }
 
     //atualiza os itens da categoria
@@ -134,12 +148,14 @@ public class InsertDebts extends AppCompatActivity {
         for(int i=0;i<categories.size();i++){
             Category cat = categories.get(i);
             list.add(cat.getType());
+            //if(cat.getType()==newCategory) mCategorySelected = i;
         }
 
         ArrayAdapter<String> adp1 = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, list);
         adp1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpinnerCategory.setAdapter(adp1);
+        mSpinnerCategory.setSelection(adp1.getPosition(newCategory));
     }
 
     //criar conexão
@@ -169,6 +185,52 @@ public class InsertDebts extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    //verifica os dados adicionados pelo formulario
+    private Debts checkData(){
+        Debts debt = null;
+        String msg = "";
+        if(mEditTextDescription.getText().toString().isEmpty())
+            msg = "*Informe a descrição do débito.\n";
+
+        if(mEditTextValue.getText().toString().isEmpty())
+            msg += "*Informe o valor do débito.\n";
+        else if(Float.parseFloat(mEditTextValue.getText().toString())<=0)
+            msg += "*Informe um valor válido (>0) para o débito.\n";
+
+        if(mEditTextDataPay.getText().toString().isEmpty())
+            msg += "*Informe a data do débito.\n";
+
+        if(!msg.isEmpty())
+            createAlertDialog(msg);
+        else{
+            //criar uma instância do débito
+            debt = new Debts();
+            debt.setCategory(mCategoryDAO.getCategory(mSpinnerCategory.getSelectedItem().toString()));
+            debt.setPaymentDate(mEditTextDataPay.getText().toString());
+            debt.setDescription(mEditTextDescription.getText().toString());
+            debt.setValue(Float.parseFloat(mEditTextValue.getText().toString()));
+            if(mSwitchPayed.isChecked()){
+                debt.setPayDate(debt.getPaymentDate());
+            }else{
+                debt.setPayDate("");
+            }
+        }
+        return debt;
+    }
+
+    private void createAlertDialog(String msg) {
+        //Cria o gerador do AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        //define o titulo
+        builder.setTitle("Erro");
+        //define a mensagem
+        builder.setMessage(msg);
+        builder.setCancelable(true);
+        builder.create();
+        //Exibe
+        builder.show();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) { //Botão na ToolBar
         switch (item.getItemId()) {
@@ -177,7 +239,13 @@ public class InsertDebts extends AppCompatActivity {
                 finishAffinity(); //Método para matar a activity e não deixa-lá indexada na pilhagem
                 break;
             case R.id.okMenu:
-                Log.d("Item Menu","Menu: "+R.string.okMenu);
+                Debts debt = checkData();
+                if(debt!=null){
+                    mDebtsDAO.insert(debt);
+                    startActivity( new Intent(this, MainWindow.class)); //O efeito ao ser pressionado do botão (no caso abre a activity)
+                    finishAffinity(); //Método para matar a activity e não deixa-lá indexada na pilhagem
+                }
+                //Log.d("Item Menu","Menu: "+R.string.okMenu);
                 break;
             default:break;
 

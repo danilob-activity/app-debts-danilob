@@ -1,6 +1,7 @@
 package com.example.danilo.appdebts.adapters;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
@@ -13,6 +14,8 @@ import android.widget.TextView;
 
 import com.example.danilo.appdebts.R;
 import com.example.danilo.appdebts.classes.Debts;
+import com.example.danilo.appdebts.dao.DebtsDAO;
+import com.example.danilo.appdebts.database.DatabaseHelper;
 
 import org.w3c.dom.Text;
 
@@ -134,6 +137,21 @@ public class DebtsAdapter extends RecyclerView.Adapter<DebtsAdapter.ViewHolderDe
 
                     }
                     selectedItem = actualItem;
+                }
+            });
+
+            mButtonDelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(mData.size()>0) {
+                        Debts debt = mData.get(getLayoutPosition());
+                        DatabaseHelper mDataHelper = new DatabaseHelper(mContext);
+                        SQLiteDatabase mConection = mDataHelper.getWritableDatabase();
+                        DebtsDAO debtDAO = new DebtsDAO(mConection);
+                        debtDAO.remove(debt.getId());
+                        mData.remove(getLayoutPosition());
+                        notifyItemRemoved(getLayoutPosition());
+                    }
                 }
             });
 
